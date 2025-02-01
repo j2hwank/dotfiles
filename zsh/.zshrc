@@ -110,3 +110,14 @@ if which pyenv-virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -
 export NVM_DIR="$HOME/.nvm"
 [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
 [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+
+
+# Brewfile update and GitHub push
+alias brewupdate="brew bundle dump --file=~/dotfiles/Brewfile --force && cd ~/dotfiles && git add Brewfile && git commit -m 'Update Brewfile' && git push origin main"
+
+# dotfiles(zsh) update and GitHub push
+alias zshupdate="cd ~/dotfiles && git add zsh/.zshrc zsh/.zprofile && git commit -m 'Update Zsh config' && git push origin main"
+
+#  New dotfiles, Brewfile apply
+alias brewsync="cd ~/dotfiles && git pull origin main && brew bundle --file=~/dotfiles/Brewfile"
+alias zshsync="cd ~/dotfiles && git pull origin main && stow zsh && source ~/.zshrc"
