@@ -26,23 +26,31 @@ brew "wget"
 brew "yarn"
 brew "zlib"
 cask "dbeaver-community"
-cask "iterm2"
+cask "docker"
 cask "pgadmin4"
 cask "postman"
 cask "visual-studio-code"
+mas "eDrawings", id: 1209754386
 mas "GarageBand", id: 682658836
 mas "Goodnotes", id: 1444383602
+mas "HP Smart", id: 1474276998
 mas "iMovie", id: 408981434
 mas "KakaoTalk", id: 869223134
 mas "Keynote", id: 409183694
+mas "LimeChat", id: 414030210
+mas "Messenger", id: 1480068668
 mas "Microsoft Excel", id: 462058435
 mas "Microsoft PowerPoint", id: 462062816
 mas "Microsoft Word", id: 462054704
 mas "Notability", id: 360593530
 mas "Numbers", id: 409203825
 mas "Pages", id: 409201541
+mas "Perplexity", id: 6714467650
+mas "Shapr3D", id: 1091675654
+mas "SimpleMind", id: 439654198
 mas "Slack", id: 803453959
 mas "WhatsApp", id: 310633997
+mas "Xcode", id: 497799835
 vscode "batisteo.vscode-django"
 vscode "donjayamanne.python-environment-manager"
 vscode "donjayamanne.python-extension-pack"
