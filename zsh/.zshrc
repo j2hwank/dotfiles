@@ -121,3 +121,8 @@ alias zshupdate="cd ~/dotfiles && git add zsh/.zshrc zsh/.zprofile && git commit
 #  New dotfiles, Brewfile apply
 alias brewsync="cd ~/dotfiles && git pull origin main && brew bundle --file=~/dotfiles/Brewfile"
 alias zshsync="cd ~/dotfiles && git pull origin main && stow zsh && source ~/.zshrc"
+export PATH="$HOME/.local/bin:$PATH"
+
+# Fedora
+alias fedora-wake='wakeonlan -i 192.168.219.255 d8:5e:d3:5b:a0:f9'
+alias fedora-off='ssh kwon@100.104.214.108 "sudo /usr/sbin/poweroff"'
