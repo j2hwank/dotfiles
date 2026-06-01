@@ -126,3 +126,5 @@ export PATH="$HOME/.local/bin:$PATH"
 # Fedora
 alias fedora-wake='wakeonlan -i 192.168.219.255 d8:5e:d3:5b:a0:f9'
 alias fedora-off='ssh kwon@100.104.214.108 "sudo /usr/sbin/poweroff"'
+
+. "$HOME/.local/bin/env"

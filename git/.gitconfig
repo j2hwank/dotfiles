@@ -1,3 +1,5 @@
 [user]
 	name = Ji-Hwan Kwon
 	email = j2hwank@gmail.com
+[init]
+	defaultBranch = main
