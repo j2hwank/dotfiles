@@ -128,8 +128,8 @@ alias fedora-wake='wakeonlan -i 192.168.219.255 d8:5e:d3:5b:a0:f9'
 alias fedora-off='ssh kwon@fedora "sudo /usr/sbin/poweroff"'
 
 # KRISS VPN
-alias vpn-on='sudo /Users/kwon/MyDevel/mail_archive/venv/bin/python /Users/kwon/MyDevel/mail_archive/vpn_cli.py connect'
-alias vpn-off='sudo /Users/kwon/MyDevel/mail_archive/venv/bin/python /Users/kwon/MyDevel/mail_archive/vpn_cli.py disconnect'
-alias vpn-status='/Users/kwon/MyDevel/mail_archive/venv/bin/python /Users/kwon/MyDevel/mail_archive/vpn_cli.py status'
+alias vpn-on='sudo /Users/kwon/MyDevel/mail-archive/venv/bin/python /Users/kwon/MyDevel/mail-archive/vpn_cli.py connect'
+alias vpn-off='sudo /Users/kwon/MyDevel/mail-archive/venv/bin/python /Users/kwon/MyDevel/mail-archive/vpn_cli.py disconnect'
+alias vpn-status='/Users/kwon/MyDevel/mail-archive/venv/bin/python /Users/kwon/MyDevel/mail-archive/vpn_cli.py status'
 
 . "$HOME/.local/bin/env"
