@@ -131,5 +131,11 @@ alias fedora-off='ssh kwon@fedora "sudo /usr/sbin/poweroff"'
 alias vpn-on='sudo /Users/kwon/MyDevel/mail-archive/venv/bin/python /Users/kwon/MyDevel/mail-archive/vpn_cli.py connect'
 alias vpn-off='sudo /Users/kwon/MyDevel/mail-archive/venv/bin/python /Users/kwon/MyDevel/mail-archive/vpn_cli.py disconnect'
 alias vpn-status='/Users/kwon/MyDevel/mail-archive/venv/bin/python /Users/kwon/MyDevel/mail-archive/vpn_cli.py status'
+alias mailon='/Users/kwon/MyDevel/mail-archive/venv/bin/python /Users/kwon/MyDevel/mail-archive/open_cli.py mailon'
+alias krisstar='/Users/kwon/MyDevel/mail-archive/venv/bin/python /Users/kwon/MyDevel/mail-archive/open_cli.py krisstar'
 
 . "$HOME/.local/bin/env"
+
+# filehub — 실전 허브 기본값과 명령 별칭 (2026-07-19)
+export FILEHUB_HUB="$HOME/Dropbox/FileHub"
+alias filehub="$HOME/MyDevel/filehub/.venv/bin/filehub"
