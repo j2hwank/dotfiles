@@ -128,11 +128,11 @@ alias fedora-wake='wakeonlan -i 192.168.219.255 d8:5e:d3:5b:a0:f9'
 alias fedora-off='ssh kwon@fedora "sudo /usr/sbin/poweroff"'
 
 # KRISS VPN
-alias vpn-on='sudo /Users/kwon/MyDevel/mail-archive/venv/bin/python /Users/kwon/MyDevel/mail-archive/vpn_cli.py connect'
-alias vpn-off='sudo /Users/kwon/MyDevel/mail-archive/venv/bin/python /Users/kwon/MyDevel/mail-archive/vpn_cli.py disconnect'
-alias vpn-status='/Users/kwon/MyDevel/mail-archive/venv/bin/python /Users/kwon/MyDevel/mail-archive/vpn_cli.py status'
-alias mailon='/Users/kwon/MyDevel/mail-archive/venv/bin/python /Users/kwon/MyDevel/mail-archive/open_cli.py mailon'
-alias krisstar='/Users/kwon/MyDevel/mail-archive/venv/bin/python /Users/kwon/MyDevel/mail-archive/open_cli.py krisstar'
+alias vpn-on='sudo /Users/kwon/MyDevel/mailhub/venv/bin/python /Users/kwon/MyDevel/mailhub/vpn_cli.py connect'
+alias vpn-off='sudo /Users/kwon/MyDevel/mailhub/venv/bin/python /Users/kwon/MyDevel/mailhub/vpn_cli.py disconnect'
+alias vpn-status='/Users/kwon/MyDevel/mailhub/venv/bin/python /Users/kwon/MyDevel/mailhub/vpn_cli.py status'
+alias mailon='/Users/kwon/MyDevel/mailhub/venv/bin/python /Users/kwon/MyDevel/mailhub/open_cli.py mailon'
+alias krisstar='/Users/kwon/MyDevel/mailhub/venv/bin/python /Users/kwon/MyDevel/mailhub/open_cli.py krisstar'
 
 . "$HOME/.local/bin/env"
 
