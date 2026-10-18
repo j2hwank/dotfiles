@@ -169,8 +169,12 @@ _theme_seq() {  # $1=cmux 번들 테마 이름 → 배경·글자·커서·16색
   done < $f
 }
 _ssh_theme() {  # $1=테마 이름, $2=iTerm2 탭·cmux 사이드바 색 hex
-  local h=$2
+  local h=$2 bg
   _theme_seq "$1" > /dev/tty || return 1
+  # cmux는 패널의 첫 OSC 11 배경을 그리지 않는다(manaflow-ai/cmux#7242, #7509). 같은 색을 다시 보내면
+  # 변화 없음으로 무시하므로, 잠시 뒤 한 단계 다른 색 → 진짜 색 순서로 다시 보내 실제 변경을 일으킨다
+  bg=$(awk '$1=="background"{print substr($3,2)}' "/Applications/cmux.app/Contents/Resources/ghostty/themes/$1")
+  { sleep 0.3; printf '\e]11;#%06x\a\e]11;#%s\a' $((16#$bg ^ 1)) $bg > /dev/tty } &!
   [[ $TERM_PROGRAM == iTerm.app ]] && printf '\e]6;1;bg;red;brightness;%s\a\e]6;1;bg;green;brightness;%s\a\e]6;1;bg;blue;brightness;%s\a' \
     $((16#${h:0:2})) $((16#${h:2:2})) $((16#${h:4:2})) > /dev/tty
   # cmux 일부 패널은 OSC 11 배경을 화면에 안 그리는 버그가 있어(manaflow-ai/cmux#8870) 사이드바 워크스페이스 색도 함께 표시
@@ -195,26 +199,37 @@ ssh() {
 }
 # tmux-mirror <host> [cmux ssh-tmux 옵션]: 원격 tmux 세션을 cmux 사이드바에 미러링하고 위 그룹 테마를 적용.
 #   미러 패널은 원격 tmux 출력을 그대로 그리므로 원격 pane tty에 OSC를 써 넣으면 색이 바뀐다.
-#   이후 새로 만든 세션·창·분할도 원격 tmux 전역 훅으로 자동 적용 (사이드바 색은 tmux-mirror 재실행 시 갱신).
+#   단, 한 번도 화면에 보인 적 없는 미러 패널에 색을 보내면 cmux가 그 패널을 영영 안 그린다(빈 화면).
+#   그래서 워크스페이스마다 잠깐 띄워서 그린 다음 색을 보내고 원래 워크스페이스로 돌아온다.
+#   이후 새 창·분할은 원격 tmux 전역 훅이 칠한다(지금 보이는 활성 pane만). 새 세션은 tmux-mirror를 다시 실행.
 tmux-mirror() {
   [[ -z $1 ]] && { echo "사용법: tmux-mirror <host> [cmux ssh-tmux 옵션]" >&2; return 1; }
-  local dest=$1 t seq s w
-  cmux ssh-tmux "$@" || return
+  local dest=$1 here=$CMUX_WORKSPACE_ID t seq bg bgseq sessions s w
+  CMUX_QUIET=1 cmux ssh-tmux "$@" --no-focus || return
   t=$(_ssh_group "$(_ssh_hostname "$dest")") || return 0
   seq=$(_theme_seq "${t%|*}") || return 0
-  # 원격: 테마 시퀀스를 파일로 두고 모든 pane에 지금 적용. 전역 훅(인덱스 77 고정, 재실행해도 중복 없음)으로
-  # 새 세션·창·분할에도 적용하되, cmux 미러(tmux 컨트롤 모드 클라이언트)가 붙어 있을 때만 동작
-  local sessions
-  sessions=$(printf '%s' "$seq" | command ssh -o BatchMode=yes "$dest" '
-    f=~/.cache/tmux-mirror-theme; mkdir -p ~/.cache; cat > $f
-    tmux list-panes -a -F "#{pane_tty}" | while read p; do cat $f > $p; done
-    t=$(command -v tmux); cmd="run-shell -b \"sleep 0.5; $t list-clients -F \\\"##{client_control_mode}\\\" | grep -q 1 && cat $f > #{pane_tty}\""
-    for h in session-created after-new-window after-split-window; do tmux set-hook -g "${h}[77]" "$cmd"; done
+  bg=$(awk '$1=="background"{print substr($3,2)}' "/Applications/cmux.app/Contents/Resources/ghostty/themes/${t%|*}")
+  # 새 패널의 첫 OSC 11은 무시되고 같은 색 재전송도 무시되므로, 한 단계 다른 색 → 진짜 색 (_ssh_theme과 같은 방법)
+  bgseq=$(printf '\e]11;#%06x\a\e]11;#%s\a' $((16#$bg ^ 1)) $bg)
+  # 원격: 테마를 파일 둘(전체·배경 재전송)로 두고, 새 창·분할 훅(인덱스 77 고정, 재실행해도 중복 없음)을 건다.
+  #   훅은 cmux 미러가 붙어 있고 새 pane이 활성 창의 활성 pane일 때(= 지금 보이는 것)만 칠한다
+  sessions=$(printf '%s\n%s\n' "$seq" "$bgseq" | command ssh -o BatchMode=yes "$dest" '
+    f=~/.cache/tmux-mirror-theme; mkdir -p ~/.cache
+    IFS= read -r a; IFS= read -r b; printf %s "$a" > $f; printf %s "$b" > $f.bg
+    t=$(command -v tmux)
+    cmd="run-shell -b \"sleep 1; [ #{window_active}#{pane_active} = 11 ] && $t list-clients -F \\\"##{client_control_mode}\\\" | grep -q 1 && cat $f > #{pane_tty} && sleep 0.3 && cat $f.bg > #{pane_tty}\""
+    for h in after-new-window after-split-window; do tmux set-hook -g "${h}[77]" "$cmd"; done
+    tmux set-hook -gu "session-created[77]"
     tmux list-sessions -F "#{session_name}"') || return 0
-  # 사이드바 색: 미러 워크스페이스는 원격 세션 이름을 제목으로 쓴다
+  # 미러 워크스페이스는 원격 세션 이름을 제목으로 쓴다 → 사이드바 색, 띄워서 그린 뒤 활성 pane에 색
   for s in ${(f)sessions}; do
-    for w in ${(f)"$(CMUX_QUIET=1 cmux workspace list 2>/dev/null | awk -v s="$s" '{r=$1=="*"?$2:$1; sub(/^[* ]*workspace:[0-9]+  /,""); sub(/  \[selected\]$/,""); if ($0==s) print r}')"}; do
-      cmux workspace-action --workspace $w --action set-color --color "#${t#*|}" &>/dev/null
-    done
+    w=$(CMUX_QUIET=1 cmux workspace list 2>/dev/null | awk -v s="$s" '{r=$1=="*"?$2:$1; sub(/^[* ]*workspace:[0-9]+  /,""); sub(/  \[selected\]$/,""); if ($0==s) {print r; exit}}')
+    [[ -z $w ]] && continue
+    cmux workspace-action --workspace $w --action set-color --color "#${t#*|}" &>/dev/null
+    CMUX_QUIET=1 cmux select-workspace --workspace $w &>/dev/null
+    sleep 1
+    command ssh -o BatchMode=yes "$dest" "p=\$(tmux display -p -t '$s' '#{pane_tty}'); f=~/.cache/tmux-mirror-theme; cat \$f > \$p; sleep 0.3; cat \$f.bg > \$p"
   done
+  [[ -n $here ]] && CMUX_QUIET=1 cmux select-workspace --workspace $here &>/dev/null
+  return 0
 }
