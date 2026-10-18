@@ -139,3 +139,53 @@ alias krisstar='/Users/kwon/MyDevel/mailhub/venv/bin/python /Users/kwon/MyDevel/
 # filehub — 실전 허브 기본값과 명령 별칭 (2026-07-19)
 export FILEHUB_HUB="$HOME/Dropbox/FileHub"
 alias filehub="$HOME/MyDevel/filehub/.venv/bin/filehub"
+
+# ssh 접속 중 iTerm2/cmux(Ghostty) 색을 서버 그룹별로 바꾸고, 종료 시 원래 색으로 복원.
+#   공개 서버(kwonlab/hostinger) Nord · 연구실(192.168.x) TokyoNight Storm · Tailscale 기기 Rosé Pine
+#   · 폰 Gruvbox Dark · 그 외 Kanagawa Dragon (전체 테마: 배경·글자·커서·16색)
+# 색이 남아 있으면 ssh-color-reset (cmux 사이드바 색까지 지우려면 ssh-color-reset --workspace)
+_ssh_color_set() {  # $1=배경 hex, $2..4=탭 RGB (탭 색은 iTerm2 전용)
+  printf '\e]11;#%s\a' "$1" > /dev/tty
+  [[ $TERM_PROGRAM == iTerm.app ]] && printf '\e]6;1;bg;red;brightness;%s\a\e]6;1;bg;green;brightness;%s\a\e]6;1;bg;blue;brightness;%s\a' \
+    "$2" "$3" "$4" > /dev/tty
+}
+_ssh_theme() {  # $1=cmux 번들 테마 이름, $2=iTerm2 탭·cmux 사이드바 색 hex
+  local f=/Applications/cmux.app/Contents/Resources/ghostty/themes/$1 k _ v bg h=$2
+  [[ -r $f ]] || return 1
+  while read -r k _ v; do
+    case $k in
+      palette)      printf '\e]4;%s;%s\a' ${v%%=*} ${v#*=} ;;
+      foreground)   printf '\e]10;%s\a' $v ;;
+      cursor-color) printf '\e]12;%s\a' $v ;;
+      background)   bg=${v#\#} ;;
+    esac
+  done < $f > /dev/tty
+  _ssh_color_set $bg $((16#${h:0:2})) $((16#${h:2:2})) $((16#${h:4:2}))
+  # cmux는 OSC 11 배경을 화면에 안 그리는 버그가 있어(manaflow-ai/cmux#8870) 사이드바 워크스페이스 색으로 대신 표시
+  [[ -n $CMUX_WORKSPACE_ID ]] && cmux workspace-action --action set-color --color "#$h" &>/dev/null
+}
+ssh-color-reset() {
+  printf '\e]111\a\e]110\a\e]112\a\e]104\a' > /dev/tty
+  [[ $TERM_PROGRAM == iTerm.app ]] && printf '\e]6;1;bg;*;default\a' > /dev/tty
+  [[ -n $CMUX_WORKSPACE_ID && $1 == --workspace ]] && cmux workspace-action --action clear-color &>/dev/null
+  return 0
+}
+ssh() {
+  if [[ $TERM_PROGRAM != (iTerm.app|ghostty) || ! -t 1 ]]; then
+    command ssh "$@"; return
+  fi
+  local host
+  host=$(command ssh -G "$@" 2>/dev/null | awk '/^hostname /{print $2; exit}')
+  case $host in
+    72.62.71.189)            _ssh_theme Nord bf616a; local ws=--workspace ;;
+    100.121.0.5)             _ssh_theme 'Gruvbox Dark' fe8019; local ws=--workspace ;;
+    192.168.*)               _ssh_theme 'TokyoNight Storm' 7aa2f7; local ws=--workspace ;;
+    100.*|vov-desktop)       _ssh_theme 'Rose Pine' c4a7e7; local ws=--workspace ;;
+    ''|localhost|127.*)      command ssh "$@"; return ;;
+    *)                       _ssh_theme 'Kanagawa Dragon' 8a9a7b; local ws=--workspace ;;
+  esac
+  command ssh "$@"
+  local rc=$?
+  ssh-color-reset $ws
+  return $rc
+}
