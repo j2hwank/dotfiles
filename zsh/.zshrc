@@ -189,12 +189,14 @@ cpurate() {
 
 # ── 맥 환경 동기화 (2026-10-28) ───────────────────────────────
 # dsync   mbpro·mbair 를 ~/dotfiles(GitHub) 기준으로 맞춘다. 어느 맥에서든 실행.
-#         ① 이 맥의 설정 변경 커밋 → ② 다른 맥 변경 받기 → ③ Brewfile 에 있는데 없는 프로그램 설치
-#         → ④ 다른 맥에서 지운 프로그램은 물어보고 삭제 → ⑤ 이 맥 설치 목록을 Brewfile 에 기록해 올리기
+#         ① 이 맥의 설정 변경 커밋 → ② 다른 맥 변경 받기 → ③ 설정 파일 링크(stow) 다시 걸기
+#         → ④ Brewfile 에 있는데 없는 프로그램 설치 → ⑤ 다른 맥에서 지운 프로그램은 물어보고 삭제
+#         → ⑥ 이 맥 설치 목록을 Brewfile 에 기록해 올리기
 dsync() {
   local dir=$HOME/dotfiles host=${$(scutil --get LocalHostName 2>/dev/null):-$(hostname -s)}
   local old line kind name ans
-  local -a gone
+  local -a gone pkgs
+  (( $+commands[brew] && $+commands[stow] )) || { echo "dsync: brew/stow 를 찾을 수 없음" >&2; return 1; }
   old=$(git -C "$dir" rev-parse HEAD) || return 1
 
   git -C "$dir" add -A
@@ -203,6 +205,10 @@ dsync() {
     echo "dsync: 다른 맥 변경과 충돌 — ~/dotfiles 에서 직접 해결한 뒤 다시 실행하세요" >&2
     return 1
   fi
+
+  # dotfiles 의 폴더 하나 = stow 묶음 하나 (logs 제외). 기존 파일과 겹치면 stow 가 덮어쓰지 않고 알려 준다.
+  pkgs=($dir/*(/N:t)); pkgs=(${pkgs:#logs})
+  stow -d "$dir" -t "$HOME" -R $pkgs || echo "dsync: 링크 충돌 — 위 파일을 정리한 뒤 다시 실행하세요" >&2
 
   # 마지막 동기화 이후 다른 맥이 Brewfile 에서 뺀 줄
   gone=(${(f)"$(LC_ALL=C comm -23 \
