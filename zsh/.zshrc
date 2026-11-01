@@ -234,9 +234,7 @@ dsync() {
   git -C "$dir" diff --cached --quiet || git -C "$dir" commit -qm "dsync($host): Brewfile" || return 1
   git -C "$dir" push -q && echo "dsync: 완료 ($host)"
 }
-set -a
-source ~/.config/typesafe/.env
-set +a
+[ -f ~/.config/typesafe/.env ] && { set -a; source ~/.config/typesafe/.env; set +a; }
 
 # ssh 접속 중 iTerm2/cmux(Ghostty) 색을 서버 그룹별로 바꾸고, 종료 시 원래 색으로 복원.
 #   공개 서버(kwonlab/hostinger) Nord · 연구실(192.168.x) TokyoNight Storm · Tailscale 기기 Rosé Pine
